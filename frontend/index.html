@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wumpus World - AI Simulator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-container">
+                <img src="assets/logo.png" alt="Wumpus World" class="logo" onerror="this.style.display='none'">
+                <h1 class="title">Wumpus World</h1>
+                <span class="subtitle">AI Simulator with Q-Learning</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Game Area -->
+            <div class="game-area">
+                <!-- Game Board -->
+                <div class="game-board-container">
+                    <div id="game-board" class="game-board"></div>
+                    
+                    <!-- Game Over Overlay -->
+                    <div id="game-over-overlay" class="game-over-overlay hidden">
+                        <div class="game-over-content">
+                            <img src="assets/game_over.jpg" alt="Game Over" class="game-over-image" onerror="this.style.display='none'">
+                            <h2 id="game-over-title">Game Over</h2>
+                            <p id="game-over-message"></p>
+                            <p id="final-score"></p>
+                            <button id="restart-btn" class="btn btn-primary">Play Again</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Display -->
+                <div id="message-display" class="message-display">
+                    <p id="game-message">Press Start to begin!</p>
+                </div>
+            </div>
+
+            <!-- Side Panel -->
+            <aside class="side-panel">
+                <!-- Stats Panel -->
+                <div class="panel stats-panel">
+                    <h3>Game Stats</h3>
+                    <div class="stat-item">
+                        <img src="assets/score-icon.png" alt="Score" class="stat-icon" onerror="this.textContent='🎯'">
+                        <span class="stat-label">Score:</span>
+                        <span id="score-value" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <img src="assets/arrow-icon.png" alt="Arrows" class="stat-icon" onerror="this.textContent='🏹'">
+                        <span class="stat-label">Arrows:</span>
+                        <span id="arrows-value" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <img src="assets/gold-icon.png" alt="Gold" class="stat-icon" onerror="this.textContent='💰'">
+                        <span class="stat-label">Gold:</span>
+                        <span id="gold-value" class="stat-value">0/0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">👣</span>
+                        <span class="stat-label">Moves:</span>
+                        <span id="moves-value" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-icon">💀</span>
+                        <span class="stat-label">Wumpus Killed:</span>
+                        <span id="wumpus-killed-value" class="stat-value">0/0</span>
+                    </div>
+                </div>
+
+                <!-- Percepts Panel -->
+                <div class="panel percepts-panel">
+                    <h3>Current Percepts</h3>
+                    <div class="percept-indicators">
+                        <div id="percept-stench" class="percept-item inactive">
+                            <span class="percept-icon">👃</span>
+                            <span class="percept-label">Stench</span>
+                        </div>
+                        <div id="percept-breeze" class="percept-item inactive">
+                            <span class="percept-icon">💨</span>
+                            <span class="percept-label">Breeze</span>
+                        </div>
+                        <div id="percept-glitter" class="percept-item inactive">
+                            <span class="percept-icon">✨</span>
+                            <span class="percept-label">Glitter</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controls Panel -->
+                <div class="panel controls-panel">
+                    <h3>Game Controls</h3>
+                    
+                    <!-- Mode Toggle -->
+                    <div class="mode-toggle-container">
+                        <label class="mode-label">Game Mode:</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="agent-mode-toggle" class="toggle-input">
+                            <label for="agent-mode-toggle" class="toggle-label">
+                                <span class="toggle-text manual">Manual</span>
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text agent">AI Agent</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Grid Size Controls -->
+                    <div class="grid-controls">
+                        <label>Grid Size:</label>
+                        <div class="grid-size-inputs">
+                            <div class="input-group">
+                                <label for="grid-width">W:</label>
+                                <input type="number" id="grid-width" min="4" max="10" value="5">
+                            </div>
+                            <span class="size-separator">×</span>
+                            <div class="input-group">
+                                <label for="grid-height">H:</label>
+                                <input type="number" id="grid-height" min="4" max="8" value="5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button id="start-btn" class="btn btn-primary btn-large">
+                            <span class="btn-icon">▶</span> Start Game
+                        </button>
+                        <button id="reset-btn" class="btn btn-secondary">
+                            <span class="btn-icon">🔄</span> Reset
+                        </button>
+                    </div>
+
+                    <!-- Agent Controls (visible in agent mode) -->
+                    <div id="agent-controls" class="agent-controls hidden">
+                        <button id="agent-step-btn" class="btn btn-agent">
+                            <span class="btn-icon">👟</span> Next Step
+                        </button>
+                        <button id="agent-auto-btn" class="btn btn-agent">
+                            <span class="btn-icon">🤖</span> Auto Play
+                        </button>
+                        <div class="speed-control">
+                            <label for="agent-speed">Speed:</label>
+                            <input type="range" id="agent-speed" min="100" max="2000" value="500">
+                            <span id="speed-value">500ms</span>
+                        </div>
+                    </div>
+
+                    <!-- Keyboard Controls Reference -->
+                    <div class="keyboard-controls">
+                        <img src="assets/controls.png" alt="Controls" class="controls-image" onerror="this.style.display='none'">
+                        <div class="controls-text">
+                            <p><strong>Movement:</strong> Arrow Keys</p>
+                            <p><strong>Shoot:</strong> Space + Direction</p>
+                            <p><strong>Grab Gold:</strong> Enter</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Training Panel -->
+                <div class="panel training-panel">
+                    <h3>AI Training</h3>
+                    <div class="training-stats">
+                        <div class="train-stat">
+                            <span class="train-label">Episodes:</span>
+                            <span id="train-episodes">0</span>
+                        </div>
+                        <div class="train-stat">
+                            <span class="train-label">Win Rate:</span>
+                            <span id="train-winrate">0%</span>
+                        </div>
+                        <div class="train-stat">
+                            <span class="train-label">Epsilon:</span>
+                            <span id="train-epsilon">1.00</span>
+                        </div>
+                        <div class="train-stat">
+                            <span class="train-label">Q-Table Size:</span>
+                            <span id="train-qtable">0</span>
+                        </div>
+                    </div>
+                    <div class="training-controls">
+                        <div class="input-group">
+                            <label for="train-episodes-input">Episodes:</label>
+                            <input type="number" id="train-episodes-input" min="100" max="50000" value="1000" step="100">
+                        </div>
+                        <button id="train-btn" class="btn btn-train">
+                            <span class="btn-icon">🧠</span> Train Agent
+                        </button>
+                        <button id="reset-training-btn" class="btn btn-danger btn-small">
+                            Reset Training
+                        </button>
+                    </div>
+                    <div id="training-progress" class="training-progress hidden">
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <span id="progress-text">Training...</span>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Wumpus World Simulator with Q-Learning AI | Built for Interview Showcase</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
